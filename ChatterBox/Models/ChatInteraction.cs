@@ -1,6 +1,6 @@
 ﻿namespace ChatterBox.Models
 {
-    public class ChatMessage
+    public class ChatInteraction
     {
         public int Id { get; set; }
         public string UserPrompt { get; set; }
