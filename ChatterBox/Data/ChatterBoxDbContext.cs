@@ -10,6 +10,6 @@ namespace ChatterBox.Data
         {
         }
 
-        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatInteraction> ChatMessages { get; set; }
     }
 }
