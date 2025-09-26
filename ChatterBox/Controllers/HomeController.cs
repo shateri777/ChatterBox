@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ChatterBox.Models;
+using ChatterBox.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatterBox.Controllers
