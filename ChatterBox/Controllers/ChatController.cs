@@ -20,7 +20,7 @@ namespace ChatterBox.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var request = new GetHistoryRequest { Limit = 20 };
+            var request = new GetHistoryRequest { Limit = 0 };
             var response = await _getHistoryHandler.Handle(request);
             ViewBag.Messages = response.Messages;
             return View();
@@ -32,7 +32,8 @@ namespace ChatterBox.Controllers
             var historyResponse = await _getHistoryHandler.Handle(new GetHistoryRequest { Limit = 10 });
             var history = historyResponse.Messages.Select(m => new ChatHistoryItemDTO { UserPrompt = m.UserPrompt, AiResponse = m.AiResponse })
             .ToList();
-
+            if (string.IsNullOrWhiteSpace(req?.Message))
+                return BadRequest("Message is required.");
             var result = await _sendMessageHandler.Handle(new SendMessageRequest { Message = req.Message, History = history });
             var response = Ok(new
             {

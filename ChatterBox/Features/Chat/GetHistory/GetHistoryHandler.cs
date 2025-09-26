@@ -16,11 +16,11 @@ namespace ChatterBox.Features.Chat.GetHistory
 
         public async Task <GetHistoryResponse> Handle(GetHistoryRequest request)
         {
-            var messages = await _db.ChatMessages
-                .OrderByDescending(m => m.CreatedAt)
-                .Take(request.Limit)
-                .OrderBy(m => m.CreatedAt)
-                .ToListAsync();
+
+            var query = _db.ChatMessages.OrderBy(m => m.CreatedAt);
+            if (request.Limit > 0) 
+                query = (IOrderedQueryable<Models.ChatInteraction>)query.Take(request.Limit);
+            var messages = await query.ToListAsync();
 
             return new GetHistoryResponse { Messages = messages };
         }
