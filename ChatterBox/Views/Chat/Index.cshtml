@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>💬 ChatterBox</h2>
+        <div class="chat-status">
+            <span class="status-indicator">●</span>
+            <span>Redo att chatta</span>
+        </div>
+    </div>
+
+    <div class="chat-messages">
+        <div class="welcome-message">
+            <div class="message ai-message">
+                <div class="message-content">
+                    <div class="message-text">
+                        👋 Hej! Jag är din AI-assistent. Vad kan jag hjälpa dig med idag?
+                    </div>
+                    <div class="message-time">Just nu</div>
+                </div>
+            </div>
+        </div>
+
+        @if (ViewBag.Messages != null && ViewBag.Messages.Count > 0)
+        {
+            @foreach (var msg in ViewBag.Messages)
+            {
+                <div class="message user-message">
+                    <div class="message-content">
+                        <div class="message-text">@msg.UserPrompt</div>
+                        <div class="message-time">@msg.CreatedAt.ToString("HH:mm")</div>
+                    </div>
+                </div>
+
+                <div class="message ai-message">
+                    <div class="message-content">
+                        <div class="message-text">@msg.AiResponse</div>
+                        <div class="message-time">@msg.CreatedAt.ToString("HH:mm")</div>
+                    </div>
+                </div>
+            }
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="message ai-message">
+                <div class="message-content" style="background: #fee2e2; border-color: #fca5a5; color: #dc2626;">
+                    <div class="message-text">@TempData["Error"]</div>
+                    <div class="message-time">@DateTime.Now.ToString("HH:mm")</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="chat-input-container">
+        <form class="chat-form" id="chatForm">
+            <div class="input-group">
+                <textarea name="message"
+                          class="form-control message-input"
+                          placeholder="Skriv ditt meddelande här..."
+                          rows="3"
+                          maxlength="1000"
+                          required></textarea>
+                <button type="submit" id="sendBtn" class="btn btn-primary send-button">
+                    <i class="send-icon">📤</i>
+                </button>
+            </div>
+        </form>
+        <div class="input-footer">
+            <small class="text-muted">Skriv ditt meddelande och tryck på skicka-knappen</small>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let typingEl = null;
+        const form = document.getElementById('chatForm');
+        const input = document.querySelector('.message-input');
+        const list  = document.querySelector('.chat-messages');
+        const endpoint = '@Url.Action("SendMessage", "Chat")';
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.addEventListener('click', (e) => {
+            if (!input.value.trim()) {
+                e.preventDefault();
+                e.stopPropagation();
+                input.focus();
+            }
+        });
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = input.value.trim();
+            if (!message) return;
+            append(message, 'user');
+            input.value = '';
+            startTyping();
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ Message: message })
+                });
+
+                if (!res.ok) {
+                    console.error(await res.text());
+                    append('Ett fel uppstod, försök igen.', 'ai');
+                    return;
+                }
+                const data = await res.json();
+                append(data.aiResponse, 'ai');
+            } catch (err) {
+                console.error(err);
+                append('Ett nätverksfel uppstod, försök igen.', 'ai');
+            } finally {
+                stopTyping();
+            }
+        });
+
+        function append(text, who){
+            const wrap = document.createElement('div');
+            wrap.className =`message ${who}-message`;
+            wrap.innerHTML = `
+                <div class="message-content">
+                  <div class="message-text"></div>
+                  <div class="message-time">${new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}</div>
+                </div>`;
+            wrap.querySelector('.message-text').textContent = text;
+            list.appendChild(wrap);
+            list.scrollTop = list.scrollHeight;
+        }
+        function startTyping(){
+            if (typingEl) return;
+            typingEl = document.createElement('div');
+            typingEl.className = 'typing-inline';
+            typingEl.innerHTML = '<span class="spinner"></span>';
+            list.appendChild(typingEl);
+            list.scrollTop = list.scrollHeight;
+        }
+        function stopTyping(){
+            if (!typingEl) return;
+            typingEl.remove();
+            typingEl = null;
+        }
+    </script>
+}
