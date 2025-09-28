@@ -1,6 +1,6 @@
 ﻿# NätOnNät ChatterBox (Azure OpenAI)
 
-Kort skolprojekt byggt med ASP.NET Core MVC + MSSQL + Entity Framework Core som använder Azure OpenAI för att driva en enkel chatt. Chathistorik visas på sidan (nyaste överst) och sparas lokalt i din SQL Server-instans på datorn där appen körs. Designen är inspirerad av NetOnNet.
+Kort skolprojekt byggt med ASP.NET Core MVC + MSSQL + Entity Framework Core som använder Azure OpenAI för att driva en enkel chatt. Chathistorik visas på sidan (nyaste överst) och sparas lokalt i din SQL Server-instans på datorn där appen körs.
 
 ## Tech/stack
 - .NET 9 (ASP.NET Core MVC)
