@@ -2,6 +2,7 @@
 using Azure;
 using ChatterBox.Data;
 using Microsoft.EntityFrameworkCore;
+using ChatterBox.Features.Chat.DTOs;
 
 namespace ChatterBox.Features.Chat.GetHistory
 {
@@ -16,10 +17,18 @@ namespace ChatterBox.Features.Chat.GetHistory
 
         public async Task <GetHistoryResponse> Handle(GetHistoryRequest request)
         {
-
-            var query = _db.ChatMessages.OrderBy(m => m.CreatedAt);
-            if (request.Limit > 0) 
-                query = (IOrderedQueryable<Models.ChatInteraction>)query.Take(request.Limit);
+            var query = _db.ChatMessages.AsNoTracking().OrderByDescending(m => m.CreatedAt)
+                .Select(m => new ChatMessageDTO
+                {
+                    Id = m.Id,
+                    UserPrompt = m.UserPrompt,
+                    AiResponse = m.AiResponse,
+                    CreatedAt = m.CreatedAt
+                }); ;
+            if (request.Limit > 0)
+            {
+                query = query.Take(request.Limit);
+            }
             var messages = await query.ToListAsync();
 
             return new GetHistoryResponse { Messages = messages };

@@ -1,4 +1,4 @@
-﻿namespace ChatterBox.Data.DTOs
+﻿namespace ChatterBox.Features.Chat.DTOs
 {
     public class ChatHistoryItemDTO
     {

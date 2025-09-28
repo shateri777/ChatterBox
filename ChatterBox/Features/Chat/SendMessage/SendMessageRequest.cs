@@ -1,4 +1,4 @@
-﻿using ChatterBox.Data.DTOs;
+﻿using ChatterBox.Features.Chat.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace ChatterBox.Features.Chat.SendMessage
