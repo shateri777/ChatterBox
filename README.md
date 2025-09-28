@@ -38,3 +38,6 @@ setx AZURE_OPENAI_DEPLOYMENT_NAME "<ditt_chat_deployment_namn>"
 - `Views/Chat/Index.cshtml` – chattsida (JS inline).
 - `Migrations/` – EF-migreringar.
 
+## Arkitektur
+Projektet följer Vertical Slice Architecture (VSA): varje feature (Chat) kapslar in sina requests/handlers/DTO:er under `Features/Chat/*`. UI:t använder en typed ViewModel och entiteter exponeras inte direkt till vyerna.
+
