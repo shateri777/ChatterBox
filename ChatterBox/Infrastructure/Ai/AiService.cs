@@ -1,11 +1,11 @@
 ﻿using Azure.AI.OpenAI;
 using Azure;
 using ChatterBox.Models;
-using ChatterBox.Data.DTOs;
 using Azure.AI.OpenAI.Chat;
 using OpenAI.Chat;
 using System.ClientModel;
 using OpenAI;
+using ChatterBox.Features.Chat.DTOs;
 
 
 
@@ -35,8 +35,9 @@ namespace ChatterBox.Infrastructure.Ai
             var chatClient = _client.GetChatClient(_deploymentName);
             var messages = new List<ChatMessage>
             {
-                new SystemChatMessage("You are a helpful AI assistant."),
-                new SystemChatMessage($"Dagens datum är {DateTime.UtcNow}")
+                new SystemChatMessage($"Dagens datum är {DateTime.UtcNow}"),
+                new SystemChatMessage("Du är Chatterbox, 55 år gammal och bor i Stockholm, du jobbar i kundtjänst hos NätOnNät. " +
+                "Du är expert på hemelektronik och svarar endast inom det området, du kan inget annat.")
             };
             foreach (var interaction in history)
             {

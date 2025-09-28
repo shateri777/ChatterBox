@@ -13,14 +13,29 @@ namespace ChatterBox
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllersWithViews();
-            builder.Services.AddDbContext<ChatterBoxDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<ChatterBoxDbContext>(options => 
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
+                    sqlOptions => sqlOptions.EnableRetryOnFailure()));
             
-            // Register services
             builder.Services.AddScoped<IAiService, AiService>();
             builder.Services.AddScoped<SendMessageHandler>();
             builder.Services.AddScoped<GetHistoryHandler>();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ChatterBoxDbContext>();
+                try
+                {
+                    context.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while creating the database");
+                }
+            }
 
             if (!app.Environment.IsDevelopment())
             {
@@ -29,6 +44,7 @@ namespace ChatterBox
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseRouting();
 
             app.UseAuthorization();

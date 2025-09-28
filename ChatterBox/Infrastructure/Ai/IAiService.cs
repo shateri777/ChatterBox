@@ -1,4 +1,4 @@
-﻿using ChatterBox.Data.DTOs;
+﻿using ChatterBox.Features.Chat.DTOs;
 using ChatterBox.Models;
 
 namespace ChatterBox.Infrastructure.Ai
