@@ -1,146 +1,141 @@
-﻿@{
+﻿@model ChatterBox.ViewModels.ChatViewModel
+@{
     ViewData["Title"] = "Chat";
 }
 
-<div class="chat-container">
-    <div class="chat-header">
-        <h2>💬 ChatterBox</h2>
-        <div class="chat-status">
-            <span class="status-indicator">●</span>
-            <span>Redo att chatta</span>
-        </div>
-    </div>
-
-    <div class="chat-messages">
-        <div class="welcome-message">
-            <div class="message ai-message">
-                <div class="message-content">
-                    <div class="message-text">
-                        👋 Hej! Jag är din AI-assistent. Vad kan jag hjälpa dig med idag?
-                    </div>
-                    <div class="message-time">Just nu</div>
-                </div>
-            </div>
-        </div>
-
-        @if (ViewBag.Messages != null && ViewBag.Messages.Count > 0)
-        {
-            @foreach (var msg in ViewBag.Messages)
-            {
-                <div class="message user-message">
-                    <div class="message-content">
-                        <div class="message-text">@msg.UserPrompt</div>
-                        <div class="message-time">@msg.CreatedAt.ToString("HH:mm")</div>
-                    </div>
-                </div>
-
-                <div class="message ai-message">
-                    <div class="message-content">
-                        <div class="message-text">@msg.AiResponse</div>
-                        <div class="message-time">@msg.CreatedAt.ToString("HH:mm")</div>
-                    </div>
-                </div>
-            }
-        }
-
-        @if (TempData["Error"] != null)
-        {
-            <div class="message ai-message">
-                <div class="message-content" style="background: #fee2e2; border-color: #fca5a5; color: #dc2626;">
-                    <div class="message-text">@TempData["Error"]</div>
-                    <div class="message-time">@DateTime.Now.ToString("HH:mm")</div>
-                </div>
-            </div>
-        }
-    </div>
-
-    <div class="chat-input-container">
-        <form class="chat-form" id="chatForm">
-            <div class="input-group">
-                <textarea name="message"
-                          class="form-control message-input"
-                          placeholder="Skriv ditt meddelande här..."
-                          rows="3"
-                          maxlength="1000"
-                          required></textarea>
-                <button type="submit" id="sendBtn" class="btn btn-primary send-button">
-                    <i class="send-icon">📤</i>
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-12 d-flex flex-column mt-3" style="height: calc(100vh - 320px);">
+            
+            <div class="input-group mb-3 mt-2">
+                <input type="text" id="messageInput" class="form-control" placeholder="Skriv ditt meddelande här..." maxlength="1000">
+                <button class="btn btn-primary" type="button" id="sendButton">
+                    <i class="bi bi-send"></i> Skicka
                 </button>
             </div>
-        </form>
-        <div class="input-footer">
-            <small class="text-muted">Skriv ditt meddelande och tryck på skicka-knappen</small>
+
+            
+            <div id="messagesContainer" class="flex-grow-1 overflow-auto p-3 border rounded" style="background-color: #f8f9fa;">
+                @if (Model.Messages != null)
+                {
+                    @foreach (var message in Model.Messages)
+                    {
+                        <div class="message-item mb-3">
+                            <div class="ai-message mb-2">
+                                <div class="bg-light p-2 rounded d-inline-block">
+                                    @message.AiResponse
+                                </div>
+                                <small class="text-muted ms-2">@message.CreatedAt.ToString("dd/MM HH:mm")</small>
+                            </div>
+                            <div class="user-message">
+                                <div class="bg-primary text-white p-2 rounded d-inline-block">
+                                    @message.UserPrompt
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
-    <script>
-        let typingEl = null;
-        const form = document.getElementById('chatForm');
-        const input = document.querySelector('.message-input');
-        const list  = document.querySelector('.chat-messages');
-        const endpoint = '@Url.Action("SendMessage", "Chat")';
-        const sendBtn = document.getElementById('sendBtn');
-        sendBtn.addEventListener('click', (e) => {
-            if (!input.value.trim()) {
-                e.preventDefault();
-                e.stopPropagation();
-                input.focus();
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const messagesContainer = document.getElementById('messagesContainer');
+    
+    
+    messagesContainer.scrollTop = 0;
+    
+    
+    function addPendingMessageToUI(userMessage) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="message-item mb-3 pending">
+                <div class="ai-message mb-2">
+                    <div class="bg-light p-2 rounded d-inline-block ai-content">
+                        <span class="spinner-border spinner-border-sm text-secondary me-2" role="status"></span>
+                        AI skriver…
+                    </div>
+                    <small class="text-muted ms-2 ai-timestamp"></small>
+                </div>
+                <div class="user-message">
+                    <div class="bg-primary text-white p-2 rounded d-inline-block user-bubble"></div>
+                </div>
+            </div>`;
+        const messageDiv = wrapper.firstElementChild;
+        messageDiv.querySelector('.user-bubble').textContent = userMessage;
+        messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
+        messagesContainer.scrollTop = 0;
+        return messageDiv;
+    }
+
+    function resolvePendingMessage(messageDiv, aiResponse, timestamp) {
+        messageDiv.querySelector('.ai-timestamp').textContent = timestamp;
+        const aiContent = messageDiv.querySelector('.ai-content');
+        aiContent.textContent = aiResponse;
+        messageDiv.classList.remove('pending');
+        messagesContainer.scrollTop = 0;
+    }
+    
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Väntar...';
+        
+        
+        const pendingDiv = addPendingMessageToUI(message);
+        
+        fetch('/Chat/SendMessage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+                .then(data => {
+          const stamp = new Date(data.createdAt)
+            .toLocaleString('sv-SE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+          if (data.userPrompt && data.aiResponse) {
+            resolvePendingMessage(pendingDiv, data.aiResponse, stamp);
+          } else {
+            pendingDiv.querySelector('.ai-content').textContent = 'Ett fel uppstod när AI-svaret hämtades.';
+          }
+          messageInput.value = '';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            pendingDiv.querySelector('.ai-content').textContent = 'Ett fel uppstod när meddelandet skickades.';
+        })
+        .finally(() => {
+            
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="bi bi-send"></i> Skicka';
+            messageInput.focus();
         });
-        form.addEventListener('submit', async (e) => {
+    }
+    
+    
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            const message = input.value.trim();
-            if (!message) return;
-            append(message, 'user');
-            input.value = '';
-            startTyping();
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ Message: message })
-                });
-
-                if (!res.ok) {
-                    console.error(await res.text());
-                    append('Ett fel uppstod, försök igen.', 'ai');
-                    return;
-                }
-                const data = await res.json();
-                append(data.aiResponse, 'ai');
-            } catch (err) {
-                console.error(err);
-                append('Ett nätverksfel uppstod, försök igen.', 'ai');
-            } finally {
-                stopTyping();
-            }
-        });
-
-        function append(text, who){
-            const wrap = document.createElement('div');
-            wrap.className =`message ${who}-message`;
-            wrap.innerHTML = `
-                <div class="message-content">
-                  <div class="message-text"></div>
-                  <div class="message-time">${new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}</div>
-                </div>`;
-            wrap.querySelector('.message-text').textContent = text;
-            list.appendChild(wrap);
-            list.scrollTop = list.scrollHeight;
+            sendMessage();
         }
-        function startTyping(){
-            if (typingEl) return;
-            typingEl = document.createElement('div');
-            typingEl.className = 'typing-inline';
-            typingEl.innerHTML = '<span class="spinner"></span>';
-            list.appendChild(typingEl);
-            list.scrollTop = list.scrollHeight;
-        }
-        function stopTyping(){
-            if (!typingEl) return;
-            typingEl.remove();
-            typingEl = null;
-        }
-    </script>
+    });
+    
+    
+    messageInput.focus();
+});
+</script>
 }
