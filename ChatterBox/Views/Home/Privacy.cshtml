@@ -1,6 +1,15 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Integritet";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="mt-2">
+    <h1>@ViewData["Title"]</h1>
+    <p>
+        Detta är ett skolprojekt (ChatterBox). Din chathistorik sparas endast lokalt
+        på din enhet/denna instans – vi får ingen tillgång till dina meddelanden.
+        Svar genereras via Azure OpenAI, men vi lagrar inget centralt.
+    </p>
+    <ul class="mb-0">
+        <li>Azure OpenAI kräver miljövariabler: <code>AZURE_OPENAI_ENDPOINT</code>, <code>OPENAIKEY</code>, <code>AZURE_OPENAI_DEPLOYMENT_NAME</code>.</li>
+    </ul>
+</div>
